@@ -1,0 +1,444 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  CheckCircle2, 
+  Circle, 
+  Plus, 
+  BookOpen, 
+  Wallet, 
+  LayoutDashboard, 
+  Trash2, 
+  ChevronRight,
+  TrendingDown,
+  TrendingUp,
+  Calendar,
+  Settings,
+  User,
+  Bell,
+  Palette,
+  ExternalLink,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Menu,
+  X
+} from 'lucide-react';
+
+// --- Theme Configurations ---
+const themes = {
+  red: { primary: '#8b2626', hover: '#a33333', light: 'rgba(139, 38, 38, 0.1)' },
+  blue: { primary: '#1e3a8a', hover: '#1e40af', light: 'rgba(30, 58, 138, 0.1)' },
+  gold: { primary: '#856404', hover: '#9c7606', light: 'rgba(133, 100, 4, 0.1)' },
+  emerald: { primary: '#064e3b', hover: '#065f46', light: 'rgba(6, 78, 59, 0.1)' }
+};
+
+const App = () => {
+  const [activeTab, setActiveTab] = useState('habits');
+  const [theme, setTheme] = useState('red');
+  
+  // User State
+  const [profile, setProfile] = useState({
+    name: 'Executive Student',
+    bio: 'Pursuing excellence in strategic management and financial analytics.'
+  });
+
+  // Habit State
+  const [habits, setHabits] = useState([
+    { id: 1, name: 'Case Study Review', completed: [true, false, true, false, false, false, false] },
+    { id: 2, name: 'Networking Outreach', completed: [true, true, true, false, false, false, false] }
+  ]);
+
+  // Finance State
+  const [transactions, setTransactions] = useState([
+    { id: 1, type: 'income', date: '2023-10-20', category: 'Stipend', amount: 25000 },
+    { id: 2, type: 'expense', date: '2023-10-24', category: 'Catering/Networking', amount: 450.50 }
+  ]);
+  const [budgetCap, setBudgetCap] = useState(50000);
+  const [transactionType, setTransactionType] = useState('expense');
+
+  // Journal State
+  const [journals, setJournals] = useState([
+    { id: 1, date: '2023-10-24', title: 'Macroeconomics Insight', content: 'Observed interesting trends in interest rates today...' }
+  ]);
+
+  // Notification State
+  const [reminderTime, setReminderTime] = useState("21:00");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Helper for Currency
+  const formatINR = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+  const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+  const netBalance = totalIncome - totalExpenses;
+  const budgetPercentage = Math.min((totalExpenses / budgetCap) * 100, 100);
+
+  // --- Logic Handlers ---
+  const deleteHabit = (id) => setHabits(habits.filter(h => h.id !== id));
+  const deleteTransaction = (id) => setTransactions(transactions.filter(t => t.id !== id));
+  const deleteJournal = (id) => setJournals(journals.filter(j => j.id !== id));
+  const addHabit = (name) => {
+    if (!name) return;
+    setHabits([...habits, { id: Date.now(), name, completed: Array(7).fill(false) }]);
+  };
+
+  const toggleHabit = (habitId, dayIndex) => {
+    setHabits(habits.map(h => {
+      if (h.id === habitId) {
+        const newCompleted = [...h.completed];
+        newCompleted[dayIndex] = !newCompleted[dayIndex];
+        return { ...h, completed: newCompleted };
+      }
+      return h;
+    }));
+  };
+
+  const handleWhatsAppTest = () => {
+    const msg = encodeURIComponent(`Hi ${profile.name}, time for your MBA Daily Review! Update your habits and transactions here.`);
+    const url = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${msg}`;
+    window.open(url, '_blank');
+  };
+
+  const currentTheme = themes[theme];
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] text-neutral-200 font-sans selection:bg-neutral-700 pb-24 md:pb-0">
+      
+      {/* Desktop Sidebar */}
+      <nav className="fixed left-0 top-0 h-full w-64 bg-[#161616] border-r border-neutral-800 hidden md:flex flex-col p-6 z-50">
+        <div className="flex items-center gap-3 mb-12 px-2">
+          <div className="w-8 h-8 rounded-md flex items-center justify-center transition-colors" style={{ backgroundColor: currentTheme.primary }}>
+            <span className="text-white font-bold text-sm">M</span>
+          </div>
+          <h1 className="text-lg font-semibold tracking-tight text-white uppercase italic">Elite Tracker</h1>
+        </div>
+
+        <div className="flex flex-col gap-2 w-full">
+          <NavItem active={activeTab === 'habits'} theme={currentTheme} onClick={() => setActiveTab('habits')} icon={<LayoutDashboard size={20}/>} label="Habits" />
+          <NavItem active={activeTab === 'journal'} theme={currentTheme} onClick={() => setActiveTab('journal')} icon={<BookOpen size={20}/>} label="Journal" />
+          <NavItem active={activeTab === 'finance'} theme={currentTheme} onClick={() => setActiveTab('finance')} icon={<Wallet size={20}/>} label="Finance" />
+          <NavItem active={activeTab === 'settings'} theme={currentTheme} onClick={() => setActiveTab('settings')} icon={<Settings size={20}/>} label="Settings" />
+        </div>
+
+        <div className="mt-auto w-full pt-6 border-t border-neutral-800">
+           <div className="px-4 py-2">
+              <p className="text-[10px] text-neutral-500 uppercase tracking-widest mb-1">Authenticated As</p>
+              <p className="text-sm font-semibold text-white truncate">{profile.name}</p>
+           </div>
+        </div>
+      </nav>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 w-full bg-[#161616]/95 backdrop-blur-md border-t border-neutral-800 flex justify-around p-3 md:hidden z-50">
+        <MobileNavItem active={activeTab === 'habits'} theme={currentTheme} onClick={() => setActiveTab('habits')} icon={<LayoutDashboard size={24}/>} />
+        <MobileNavItem active={activeTab === 'journal'} theme={currentTheme} onClick={() => setActiveTab('journal')} icon={<BookOpen size={24}/>} />
+        <div className="relative -top-6">
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white" 
+            style={{ backgroundColor: currentTheme.primary }}
+          >
+            <Plus size={28} />
+          </button>
+        </div>
+        <MobileNavItem active={activeTab === 'finance'} theme={currentTheme} onClick={() => setActiveTab('finance')} icon={<Wallet size={24}/>} />
+        <MobileNavItem active={activeTab === 'settings'} theme={currentTheme} onClick={() => setActiveTab('settings')} icon={<Settings size={24}/>} />
+      </nav>
+
+      {/* Main Content Area */}
+      <main className="md:pl-64 min-h-screen">
+        <div className="max-w-5xl mx-auto p-5 sm:p-8 md:p-12">
+          
+          <header className="mb-8 md:mb-12 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+            <div>
+              <p className="font-medium text-[10px] md:text-sm tracking-widest uppercase mb-1" style={{ color: currentTheme.primary }}>
+                {activeTab === 'settings' ? 'System Configuration' : 'MBA Productivity Suite'}
+              </p>
+              <h2 className="text-2xl md:text-3xl font-light text-white italic">
+                {activeTab === 'habits' && 'Performance Optimization'}
+                {activeTab === 'journal' && 'Reflective Leadership'}
+                {activeTab === 'finance' && 'Fiscal Management'}
+                {activeTab === 'settings' && 'Personal Preferences'}
+              </h2>
+            </div>
+            <div className="text-left sm:text-right">
+              <p className="text-neutral-500 text-xs md:text-sm">{new Date().toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+            </div>
+          </header>
+
+          {/* TAB: HABITS */}
+          {activeTab === 'habits' && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <div className="bg-[#1a1a1a] rounded-xl border border-neutral-800 p-4 md:p-6 overflow-hidden">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-medium">Weekly Consistency</h3>
+                  <button 
+                    onClick={() => setShowAddModal(true)}
+                    className="hidden md:flex items-center gap-2 transition-colors text-white px-4 py-2 rounded-lg text-sm font-medium"
+                    style={{ backgroundColor: currentTheme.primary }}
+                  >
+                    <Plus size={16} /> New Habit
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto pb-4 custom-scrollbar">
+                  <table className="w-full text-left min-w-[600px] md:min-w-0">
+                    <thead>
+                      <tr className="text-neutral-500 text-[10px] uppercase tracking-tighter border-b border-neutral-800">
+                        <th className="pb-4 font-normal">Strategic Habit</th>
+                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+                          <th key={i} className="pb-4 text-center font-normal">{d}</th>
+                        ))}
+                        <th className="pb-4 text-right font-normal">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-800/50">
+                      {habits.map((habit) => (
+                        <tr key={habit.id} className="group">
+                          <td className="py-4 pr-4">
+                            <span className="text-sm md:text-base text-neutral-200 group-hover:text-white transition-colors block truncate max-w-[120px] md:max-w-xs">{habit.name}</span>
+                          </td>
+                          {habit.completed.map((comp, idx) => (
+                            <td key={idx} className="py-4 text-center">
+                              <button onClick={() => toggleHabit(habit.id, idx)} className="p-1">
+                                {comp ? 
+                                  <CheckCircle2 size={20} style={{ color: currentTheme.primary }} className="mx-auto" /> : 
+                                  <Circle size={20} className="text-neutral-700 hover:text-neutral-500 mx-auto" />
+                                }
+                              </button>
+                            </td>
+                          ))}
+                          <td className="py-4 text-right">
+                            <button onClick={() => deleteHabit(habit.id)} className="text-neutral-600 hover:text-red-500 p-1">
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: FINANCE */}
+          {activeTab === 'finance' && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <StatCard label="Inflow" value={formatINR(totalIncome)} highlightColor="#10b981" />
+                <StatCard label="Outflow" value={formatINR(totalExpenses)} highlightColor={currentTheme.primary} />
+                <StatCard label="Balance" value={formatINR(netBalance)} accentColor={netBalance >= 0 ? '#10b981' : '#ef4444'} />
+                <StatCard label="Cap" value={formatINR(budgetCap)} />
+              </div>
+
+              <div className="bg-[#1a1a1a] rounded-xl border border-neutral-800 p-5 md:p-8">
+                <div className="flex justify-between items-end mb-4">
+                  <h3 className="text-base md:text-lg font-medium">Budget Burn</h3>
+                  <span className="font-bold text-white text-sm md:text-base">{Math.round(budgetPercentage)}%</span>
+                </div>
+                <div className="h-2 w-full bg-neutral-900 rounded-full overflow-hidden mb-8">
+                  <div className="h-full transition-all duration-1000" style={{ width: `${budgetPercentage}%`, backgroundColor: currentTheme.primary }} />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+                  <div>
+                    <div className="flex justify-between items-center mb-6">
+                      <h4 className="text-[10px] md:text-xs font-semibold text-neutral-500 uppercase tracking-widest">Add Entry</h4>
+                      <div className="flex bg-[#121212] p-1 rounded-lg border border-neutral-800">
+                        <button onClick={() => setTransactionType('expense')} className={`px-3 py-1 text-[9px] uppercase font-bold rounded-md ${transactionType === 'expense' ? 'bg-[#8b2626] text-white' : 'text-neutral-500'}`}>Debit</button>
+                        <button onClick={() => setTransactionType('income')} className={`px-3 py-1 text-[9px] uppercase font-bold rounded-md ${transactionType === 'income' ? 'bg-[#10b981] text-white' : 'text-neutral-500'}`}>Credit</button>
+                      </div>
+                    </div>
+
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      const amount = parseFloat(e.target.amount.value);
+                      const category = e.target.category.value;
+                      if(amount && category) {
+                        setTransactions([{ id: Date.now(), type: transactionType, date: new Date().toISOString().split('T')[0], category, amount }, ...transactions]);
+                        e.target.reset();
+                      }
+                    }} className="space-y-4">
+                      <input name="category" required placeholder="Description" className="w-full bg-[#121212] border border-neutral-800 rounded-lg p-3 text-sm focus:outline-none" />
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">₹</span>
+                        <input name="amount" type="number" required placeholder="Amount" className="w-full bg-[#121212] border border-neutral-800 rounded-lg p-3 pl-7 text-sm focus:outline-none" />
+                      </div>
+                      <button className="w-full text-black py-3 rounded-lg text-sm font-bold hover:opacity-90" style={{ backgroundColor: transactionType === 'income' ? '#10b981' : '#f5f5f5' }}>Commit Transaction</button>
+                    </form>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] md:text-xs font-semibold text-neutral-500 uppercase tracking-widest mb-4">Ledger</h4>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                      {transactions.map(t => (
+                        <div key={t.id} className="flex justify-between items-center p-3 bg-[#121212] rounded-lg border border-neutral-800/50">
+                          <div className="flex items-center gap-3">
+                            <div className={t.type === 'income' ? 'text-emerald-500' : 'text-red-800'}>
+                              {t.type === 'income' ? <ArrowUpCircle size={18}/> : <ArrowDownCircle size={18}/>}
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-white">{t.category}</p>
+                              <p className="text-[8px] text-neutral-500 uppercase tracking-tighter">{t.date}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <p className="text-sm font-bold" style={{ color: t.type === 'income' ? '#10b981' : currentTheme.primary }}>{t.type === 'income' ? '+' : '-'}{formatINR(t.amount)}</p>
+                            <button onClick={() => deleteTransaction(t.id)} className="text-neutral-700"><Trash2 size={14}/></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: SETTINGS */}
+          {activeTab === 'settings' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in slide-in-from-bottom-4">
+              <div className="bg-[#1a1a1a] rounded-xl border border-neutral-800 p-6 space-y-6">
+                <div className="flex items-center gap-3">
+                  <User size={18} style={{ color: currentTheme.primary }} />
+                  <h3 className="text-base font-medium">Profile</h3>
+                </div>
+                <div className="space-y-4">
+                  <input value={profile.name} onChange={(e) => setProfile({...profile, name: e.target.value})} className="w-full bg-[#121212] border border-neutral-800 rounded-lg p-3 text-sm focus:outline-none" placeholder="Name" />
+                  <textarea value={profile.bio} onChange={(e) => setProfile({...profile, bio: e.target.value})} rows={3} className="w-full bg-[#121212] border border-neutral-800 rounded-lg p-3 text-sm focus:outline-none resize-none" placeholder="Bio" />
+                </div>
+              </div>
+
+              <div className="bg-[#1a1a1a] rounded-xl border border-neutral-800 p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Palette size={18} style={{ color: currentTheme.primary }} />
+                  <h3 className="text-base font-medium">Theme</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.keys(themes).map(t => (
+                    <button key={t} onClick={() => setTheme(t)} className={`p-3 rounded-lg border flex items-center gap-2 ${theme === t ? 'border-white bg-neutral-800' : 'border-neutral-800 bg-[#121212]'}`}>
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: themes[t].primary }} />
+                      <span className="text-[10px] uppercase font-bold capitalize">{t}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-[#1a1a1a] rounded-xl border border-neutral-800 p-6 lg:col-span-2 space-y-6">
+                <div className="flex items-center gap-3">
+                  <Bell size={18} style={{ color: currentTheme.primary }} />
+                  <h3 className="text-base font-medium">WhatsApp Reminder</h3>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 items-end">
+                  <input placeholder="WhatsApp (+91...)" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} className="w-full sm:flex-1 bg-[#121212] border border-neutral-800 rounded-lg p-3 text-sm focus:outline-none" />
+                  <input type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)} className="w-full sm:w-32 bg-[#121212] border border-neutral-800 rounded-lg p-3 text-sm focus:outline-none" />
+                  <button onClick={handleWhatsAppTest} className="w-full sm:w-auto px-6 py-3 rounded-lg bg-[#121212] border border-neutral-800 hover:bg-neutral-800 text-sm font-bold flex items-center justify-center gap-2">
+                    <ExternalLink size={16} /> Test
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: JOURNAL */}
+          {activeTab === 'journal' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4">
+               <div className="lg:col-span-1">
+                <div className="bg-[#1a1a1a] rounded-xl border border-neutral-800 p-5">
+                  <h3 className="text-lg font-medium mb-4">New Entry</h3>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const title = e.target.title.value;
+                    const content = e.target.content.value;
+                    if(title && content) {
+                      setJournals([{ id: Date.now(), date: new Date().toISOString().split('T')[0], title, content }, ...journals]);
+                      e.target.reset();
+                    }
+                  }} className="space-y-4">
+                    <input name="title" required placeholder="Focus point..." className="w-full bg-[#121212] border border-neutral-800 rounded-lg p-3 text-sm focus:outline-none" />
+                    <textarea name="content" required rows={5} placeholder="Insights..." className="w-full bg-[#121212] border border-neutral-800 rounded-lg p-3 text-sm focus:outline-none resize-none" />
+                    <button className="w-full text-white py-3 rounded-lg text-sm font-semibold" style={{ backgroundColor: currentTheme.primary }}>Save Draft</button>
+                  </form>
+                </div>
+               </div>
+               <div className="lg:col-span-2 space-y-4">
+                {journals.map(j => (
+                  <div key={j.id} className="bg-[#1a1a1a] rounded-xl border border-neutral-800 p-5 group">
+                    <div className="flex justify-between items-start mb-2">
+                       <h4 className="text-lg md:text-xl italic text-white">{j.title}</h4>
+                       <button onClick={() => deleteJournal(j.id)} className="text-neutral-700 hover:text-red-500"><Trash2 size={16} /></button>
+                    </div>
+                    <p className="text-[10px] text-neutral-500 mb-2 uppercase tracking-widest">{j.date}</p>
+                    <p className="text-sm leading-relaxed text-neutral-300">{j.content}</p>
+                  </div>
+                ))}
+               </div>
+            </div>
+          )}
+
+        </div>
+      </main>
+
+      {/* Responsive Habit Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] border-t sm:border border-neutral-800 w-full max-w-md rounded-t-2xl sm:rounded-2xl p-8 shadow-2xl animate-in slide-in-from-bottom duration-300">
+            <h3 className="text-xl italic text-white mb-6">Create Requirement</h3>
+            <input 
+              id="habitInput"
+              autoFocus
+              placeholder="e.g. Market Research"
+              className="w-full bg-[#121212] border border-neutral-800 rounded-xl p-4 mb-6 focus:outline-none"
+              onKeyDown={(e) => { if(e.key === 'Enter') { addHabit(e.target.value); setShowAddModal(false); } }}
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 rounded-xl border border-neutral-800 text-sm">Dismiss</button>
+              <button 
+                onClick={() => { const v = document.getElementById('habitInput').value; if(v) addHabit(v); setShowAddModal(false); }}
+                className="flex-1 py-3 rounded-xl text-white text-sm font-bold"
+                style={{ backgroundColor: currentTheme.primary }}
+              >Deploy</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const NavItem = ({ active, icon, label, onClick, theme }) => (
+  <button 
+    onClick={onClick}
+    className="flex items-center gap-4 w-full px-4 py-3 rounded-xl transition-all duration-200 group"
+    style={{ backgroundColor: active ? theme.light : 'transparent', color: active ? theme.primary : '#737373' }}
+  >
+    <div className={active ? '' : 'group-hover:text-white transition-colors'}>{icon}</div>
+    <span className="text-sm font-medium uppercase tracking-widest">{label}</span>
+  </button>
+);
+
+const MobileNavItem = ({ active, icon, onClick, theme }) => (
+  <button 
+    onClick={onClick}
+    className="p-3 transition-colors relative"
+    style={{ color: active ? theme.primary : '#737373' }}
+  >
+    {icon}
+    {active && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full" style={{ backgroundColor: theme.primary }} />}
+  </button>
+);
+
+const StatCard = ({ label, value, accentColor, highlightColor }) => (
+  <div className="bg-[#1a1a1a] border border-neutral-800 p-3 md:p-5 rounded-xl transition-all" style={{ borderLeft: (accentColor || highlightColor) ? `3px solid ${accentColor || highlightColor}` : '1px solid #262626' }}>
+    <p className="text-[8px] md:text-[10px] uppercase tracking-widest text-neutral-500 mb-1">{label}</p>
+    <p className="text-sm md:text-xl font-bold text-white truncate" style={{ color: highlightColor ? highlightColor : 'white' }}>{value}</p>
+  </div>
+);
+
+export default App;
